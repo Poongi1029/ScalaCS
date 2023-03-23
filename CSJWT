@@ -1,0 +1,116 @@
+JWT Pckg...
+***************fetchuser*************
+package JWT
+object fetchuser extends App {
+  case class User(username: String, password: String, firstName: String, lastName: String, groups:List[String])
+
+  // List of users
+  val userList = List(
+    User("user1", "password1", "Poo", "Ipoo", List("admins", "users")),
+    User("user2", "password2", "Iman", "Mpoo", List("users")),
+    User("user3", "password3", "Christy", "Aman", List("admins")),
+    User("user4", "password4", "Ashok", "Nane", List("users")),
+    User("user5", "password5", "Siva", "Siva", List("users"))
+  )
+
+  // Function to fetch a paginated list of users
+  def getUsers(page: Int, pageSize: Int): List[User] = {
+    val startIdx = (page - 1) * pageSize
+    val endIdx = startIdx + pageSize
+    userList.slice(startIdx, endIdx)
+  }
+
+  // Example usage
+  val page = 2
+  val pageSize = 2
+  val users = getUsers(page, pageSize)
+  println(s"Page $page of users with page size $pageSize:")
+  users.foreach(println)
+} 
+
+
+*************User JWT*****************
+package JWT
+
+import com.sun.org.apache.xml.internal.security.algorithms.SignatureAlgorithm
+
+import java.time.Instant
+import java.util.{Base64, Date}
+import io.jsonwebtoken.{Jwts}
+object User extends App {
+  case class User(username: String, password: String, firstName: String, lastName: String, groups: List[String])
+
+  // List of users
+  var userList = List(User("user1", "password1", "John", "Doe", List("admins", "users")), User("user2", "password2", "Jane", "Doe", List("users")))
+
+  // Secret key for JWT signature
+  val secretKey = "mysecretkey"
+
+  // Function to login a user and return a JWT token with their groups
+  def login(username: String, password: String): Option[String] = {
+    val userOpt = userList.find(user => user.username == username && user.password == password)
+    if (userOpt.isDefined) {
+      val user = userOpt.get
+      val groups = user.groups
+      val now = Instant.now()
+      val expirationDate = Date.from(now.plusSeconds(3600)) // Token expires in 1 hour
+      val token = Jwts.builder()
+        .setSubject(username)
+        .claim("groups", groups)
+        .setIssuedAt(Date.from(now))
+        .setExpiration(expirationDate)
+        .signWith(SignatureAlgorithm.HS256,
+          secretKey.getBytes())
+        .compact()
+      Some(token)
+    } else {
+      None
+    }
+  }
+
+  // Example usage
+  val tokenOpt = login("user1", "password1")
+  if (tokenOpt.isDefined) {
+    println(tokenOpt.get)
+  } else {
+    println("Login failed")
+  }
+}
+
+***********enableuser and disable user*********
+
+package JWT
+
+object enableuser extends App {
+  case class User(username: String, password: String, firstName: String, lastName: String, groups: List[String])
+
+  // List of users
+  var userList = List(User("user1", "password1", "John", "Doe", List("admins", "users")), User("user2", "password2", "Jane", "Doe", List("users")))
+
+  // Flag to enable/disable update user API
+  var updateUserEnabled = true
+
+  // Function to update a user
+  def updateUser(username: String, updatedUser: User): Option[User] = {
+    if (updateUserEnabled) {
+      val idx = userList.indexWhere(user => user.username == username)
+      if (idx >= 0) {
+        userList = userList.updated(idx, updatedUser)
+        Some(updatedUser)
+      } else {
+        None
+      }
+    } else {
+      None
+    }
+  }
+
+  // Example usage
+  val updatedUser = User("user1", "newpassword", "John", "Doe", List("admins", "users"))
+  val result = updateUser("user1", updatedUser)
+  if (result.isDefined) {
+    println("User updated successfully")
+  } else {
+    println("Update user API disabled")
+  }
+}
