@@ -1,0 +1,137 @@
+Login pckg...
+**********Group*********
+package Login
+
+import scala.collection.mutable
+object Group extends App {
+    case class Group(name: String, permissions: mutable.ListBuffer[String])
+
+  val groups = mutable.Map[String, Group]()
+
+
+  def createGroup(name: String, permissions: List[String]): Unit = {
+
+    if (groups.contains(name)) {
+      println(s"Group '$name' already exists. Please choose a different name.")
+    } else {
+
+      val group = Group(name, mutable.ListBuffer(permissions: _*))
+      groups(name) = group
+      println(s"Group '$name' created successfully with permissions: ${group.permissions}")
+    }
+
+
+
+    // Asign user Group
+    case class User(username: String, password: String, firstName: String, lastName: String, groups: List[String])
+
+    var userList = List(User("user1", "password1", "poo", "poo", List("admins")), User("user2", "password2", "hema", "poo", List("users")))
+
+    def addUserToGroup(username: String, groupName: String): Unit = {
+      val updatedUserList = userList.map(user => {
+        if (user.username == username) {
+          val updatedGroups = groupName :: user.groups
+          User(user.username, user.password, user.firstName, user.lastName, updatedGroups)
+        } else {
+          user
+        }
+      })
+      userList = updatedUserList
+    }
+
+    addUserToGroup("user1", "users")
+    println(userList)
+
+  }
+
+  createGroup("admin", List("read", "write", "delete"))
+  createGroup("guest", List("read"))
+
+
+  // Remove Group
+  case class User(username: String, password: String, firstName: String, lastName: String, groups: List[String])
+
+  var userList = List(User("user1", "password1", "poo", "poo", List("admins", "users")), User("user2", "password2", "hema", "poo", List("users")))
+
+  def removeUserFromGroup(username: String, groupName: String): Unit = {
+    val updatedUserList = userList.map(user => {
+      if (user.username == username) {
+        val updatedGroups = user.groups.filter(group => group != groupName)
+        User(user.username, user.password, user.firstName, user.lastName, updatedGroups)
+      } else {
+        user
+      }
+    })
+    userList = updatedUserList
+  }
+
+  removeUserFromGroup("user1", "users")
+  println(userList)
+
+}
+
+
+**********mysql***********
+package Login
+import java.sql.{Connection, DriverManager, PreparedStatement}
+object Mysql extends App {
+
+  val url = "jdbc:mysql://localhost:3306/user_management_system"
+  val username = "your_database_username"
+  val password = "your_database_password"
+
+
+  val uname = "new_user"
+  val psd = "poo123"
+  val firstName = "poo"
+  val lastName = "poo"
+
+  // Establish a connection to the database
+  val connection: Connection = DriverManager.getConnection(url, uname, psd)
+
+  // Prepare the SQL statement for inserting the new user
+  val insertStatement: PreparedStatement = connection.prepareStatement(
+    "INSERT INTO users (username, password, first_name, last_name) VALUES (?, ?, ?, ?)"
+  )
+
+  // Set the values for the parameters in the SQL statement
+  insertStatement.setString(1, uname)
+  insertStatement.setString(2, psd)
+  insertStatement.setString(3, firstName)
+  insertStatement.setString(4, lastName)
+
+  // Execute the SQL statement to insert the new user
+  insertStatement.executeUpdate()
+
+  // Close the database connection and the prepared statement
+  insertStatement.close()
+  connection.close()
+
+}
+
+
+*************User*************
+package Login
+
+
+import scala.collection.mutable.Map
+
+object User extends App {
+
+    case class User(val uname: String, psd: String, firstname: String, lastname: String)
+
+    val users = Map[String, User]()
+
+    def addUser(uname: String, psd: String, firstname: String, lastname: String): Unit = {
+
+      if (users.contains(uname)) {
+        println(s"Username '$uname' already exists. Please choose a different username.")
+      } else {
+        val user = User(uname, psd, firstname, lastname)
+        users(uname) = user
+        println(s"User '$uname' added successfully.")
+      }
+    }
+
+
+}
